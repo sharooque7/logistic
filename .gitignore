@@ -1,1 +1,4 @@
 env/*
+
+scripts/route_data.json
+scripts/actual_sequences.json
