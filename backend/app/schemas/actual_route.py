@@ -5,6 +5,5 @@ class ActualStopResponse(BaseModel):
     actual_sequence: int
 
     class Config:
-        orm_mode = True
         from_attributes = True  
     

@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: route_intelligence_db
+    environment:
+      POSTGRES_DB: route_intelligence
+      POSTGRES_USER: ainzson
+      POSTGRES_PASSWORD: ainzson123
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./backend/app/scripts/sql:/docker-entrypoint-initdb.d
+    networks:
+      - route_intelligence
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: route_intelligence_api
+    command: >
+      sh -c "
+      sleep 5 &&
+      python3 /app/app/scripts/mock/insert_route_metadata.py /app/app/scripts/mock/route_data.json &&
+      python3 /app/app/scripts/mock/insert_actual_sequence_data.py /app/app/scripts/mock/actual_sequences.json &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://ainzson:ainzson123@route_intelligence_db:5432/route_intelligence
+    depends_on:
+      - db
+    networks:
+      - route_intelligence
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: route_intelligence_ui
+    volumes:
+      - ./frontend:/app
+    networks:
+      - route_intelligence
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: route_intelligence_proxy
+    ports:
+      - "81:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/dist:/usr/share/nginx/html
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - route_intelligence
+
+volumes:
+  db_data:
+
+networks:
+  route_intelligence:
+    driver: bridge

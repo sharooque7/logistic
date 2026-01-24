@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # Database
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
-    POSTGRES_HOST: str = "localhost"
+    POSTGRES_HOST: str = "route_intelligence_db"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str
 

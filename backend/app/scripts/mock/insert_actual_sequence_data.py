@@ -25,11 +25,11 @@ def insert_actual_sequences(file_path):
     # 2. Database connection
     try:
         conn = psycopg2.connect(
-            dbname="rytle",      # Change this
+            dbname="route_intelligence",      # Change this
             user="ainzson",        # Change this  
             password="ainzson123",    # Change this
-            host="localhost",
-            port="5434"
+            host="route_intelligence_db",
+            port="5432"
         )
         cursor = conn.cursor()
         print("✅ Connected to database")

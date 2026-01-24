@@ -8,6 +8,5 @@ class StopResponse(BaseModel):
     zone_id: str | None
 
     class Config:
-        orm_mode = True
         from_attributes = True  
 

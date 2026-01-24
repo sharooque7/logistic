@@ -7,11 +7,11 @@ import math
 
 # Database configuration - UPDATE THESE!
 DB_CONFIG = {
-    'host': 'localhost',
-    'database': 'rytle',
+    'host': 'route_intelligence_db',
+    'database': 'route_intelligence',
     'user': 'ainzson',
     'password': 'ainzson123',
-    'port': '5434'
+    'port': '5432'
 }
 
 def parse_json_file(file_path: str) -> List[Dict[str, Any]]:
@@ -148,7 +148,7 @@ def main():
         json_file = input("Enter JSON file path: ").strip()
     
     try:
-        # Parse JSON file
+        # Parse JSON filere
         print("📂 Parsing JSON file...")
         stops_data = parse_json_file(json_file)
         print(f"📊 Found {len(stops_data)} stops in the JSON file")
@@ -158,7 +158,7 @@ def main():
         conn = psycopg2.connect(**DB_CONFIG)
         
         # Create tables
-        create_database_tables(conn)
+        # create_database_tables(conn)
         
         # Insert routes
         insert_routes(conn, json_file)

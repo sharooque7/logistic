@@ -12,10 +12,78 @@ from app.models.route_metric import RouteMetric
 
 
 def get_all_routes(db: Session):
-    return db.query(Route).all()
+    # return db.query(Route).all()
+    rows = (
+        db.query(
+            Route,
+            func.count(Stop.stop_code).label("stop_count")
+        )
+        .outerjoin(Stop, Route.route_id == Stop.route_id)
+        .group_by(Route.route_id)
+        .all()
+    )
+
+    result = []
+    for route, stop_count in rows:
+        result.append({
+            "route_id": route.route_id,
+            "station_code": route.station_code,
+            "date_YYYY_MM_DD": route.date_YYYY_MM_DD,
+            "departure_time_utc": route.departure_time_utc,
+            "executor_capacity_cm3": route.executor_capacity_cm3,
+            "route_score": route.route_score,
+            "stop_count": stop_count,
+        })
+
+    return result
+
+
+def get_total_routes_total_stops(db: Session):
+    result = (
+        db.query(
+            func.count(func.distinct(Route.route_id)).label("route_count"),
+            func.count(Stop.route_id).label("stop_count"),
+        )
+        .outerjoin(Stop, Stop.route_id == Route.route_id)
+        .one()
+    )
+
+    return {
+        "route_count": result.route_count,
+        "stop_count": result.stop_count,
+    }
+
+
+
 
 def get_all_routes_paginated(db: Session, skip: int = 0, limit: int = 10) -> List[Route]:
-    return db.query(Route).offset(skip).limit(limit).all()
+    # return db.query(Route).offset(skip).limit(limit).all()
+    rows = (
+            db.query(
+                Route,
+                func.count(Stop.stop_code).label("stop_count")
+            )
+            .outerjoin(Stop, Stop.route_id == Route.route_id)
+            .group_by(Route.route_id)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+    
+    result = []
+    for route, stop_count in rows:
+        result.append({
+            "route_id": route.route_id,
+            "station_code": route.station_code,
+            "date_YYYY_MM_DD": route.date_YYYY_MM_DD,
+            "departure_time_utc": route.departure_time_utc,
+            "executor_capacity_cm3": route.executor_capacity_cm3,
+            "route_score": route.route_score,
+            "stop_count": stop_count,
+        })
+
+    return result
+
 
 def get_route(db: Session, route_id: str):
     return db.query(Route).filter(Route.route_id == route_id).first()

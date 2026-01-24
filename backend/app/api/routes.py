@@ -14,10 +14,11 @@ from app.repositories.route_repository import (
     save_planned_route,
     get_planned_route,
     save_route_metrics,
-    get_route_metric
+    get_route_metric,
+    get_total_routes_total_stops
 )
 from app.schemas.stop import StopResponse
-from app.schemas.route import RouteResponse
+from app.schemas.route import RouteResponse, RouteResponseWithStopsCount,RouteResponseWithRouteAndStopCount
 from app.schemas.actual_route import ActualStopResponse
 from app.schemas.planned_route import PlannedRouteResponse
 from app.services.router_planner import RoutePlanner
@@ -25,11 +26,15 @@ from app.schemas.route_metric import RouteMetricBase,RouteMetricRepsonse
 
 router = APIRouter(prefix="/routes", tags=["Routes"])
 
-@router.get("/all", response_model=List[RouteResponse])
+@router.get("/all", response_model=List[RouteResponseWithStopsCount])
 def fetch_routes(db: Session = Depends(get_db)):
     return get_all_routes(db)
 
-@router.get("", response_model=List[RouteResponse])
+@router.get("/total_routes_and_stops", response_model=RouteResponseWithRouteAndStopCount)
+def fetch_routes(db: Session = Depends(get_db)):
+    return get_total_routes_total_stops(db)
+   
+@router.get("", response_model=List[RouteResponseWithStopsCount])
 def fetch_routes(
     skip: int = Query(0, ge=0),      
     limit: int = Query(10, ge=1, le=100), 
@@ -110,29 +115,6 @@ def get_route_comparison(route_id: str, db: Session = Depends(get_db)):
         "planned_route": planned_route,
         "actual_route": actual_route,
     }
-
-
-@router.get("/{route_id}/stops_actual", response_model=dict)
-def fetch_route_with_stops(route_id: str, db: Session = Depends(get_db)):
-    data = get_route_with_stops(db, route_id)
-    if not data:
-        raise HTTPException(status_code=404, detail="Route not found")
-    
-    route = data["route"]
-    stops = data["stops"]
-    actual_stops = data["actual_stops"]
-
-    return {
-        "route_id": route.route_id,
-        "station_code": route.station_code,
-        "date_YYYY_MM_DD": route.date_YYYY_MM_DD,
-        "departure_time_utc": str(route.departure_time_utc),
-        "executor_capacity_cm3": float(route.executor_capacity_cm3),
-        "route_score": route.route_score,
-        "stops": [StopResponse.from_orm(stop).dict() for stop in stops],
-        "actual_stops": [ActualStopResponse.from_orm(stop).dict() for stop in actual_stops]
-    }
-
 
 
 @router.get("/{route_id}/metrics", response_model=RouteMetricRepsonse)
